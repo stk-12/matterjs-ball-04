@@ -23,8 +23,8 @@ const world = engine.world;
 // セッティング
 const settings = {
   ball: {
-    count: 22,
-    radius: Math.min(window.innerWidth, window.innerHeight) * 0.05,
+    count: 18,
+    radius: Math.min(window.innerWidth, window.innerHeight) * 0.04,
     options: {
       restitution: 0.9,
       render: {
@@ -41,7 +41,8 @@ const settings = {
     options: {
       restitution: 0.9,
       render: {
-        fillStyle: '#FF0000',
+        fillStyle: '#FFFFFF',
+        opacity: 0,
       }
     }
   },
@@ -83,7 +84,7 @@ const createBalls = (count) => {
 }
 
 // マウス追従ボール
-const mouseBall = Bodies.circle(window.innerWidth / 2, window.innerHeight / 2, settings.mouseBall.radius, settings.mouseBall.options);
+const mouseBall = Bodies.circle(10, 10, settings.mouseBall.radius, settings.mouseBall.options);
 
 // 壁とピンの生成
 const createWallsAndPins = () => [
@@ -110,6 +111,15 @@ const mouseConstraint = MouseConstraint.create(engine, {
     }
   }
 });
+
+// balls のドラッグを無効化
+Events.on(mouseConstraint, "startdrag", (event) => {
+  if (balls.includes(event.body)) {
+    // balls のドラッグを無効化
+    mouseConstraint.constraint.bodyB = null;
+  }
+});
+
 Composite.add(world, mouseConstraint);
 
 
@@ -165,6 +175,25 @@ document.addEventListener('click', (event) => {
     const force = { x: deltaX * forceMagnitude, y: deltaY * forceMagnitude };
     Body.applyForce(ball, ball.position, force);
   });
+});
+
+// クリック時にmouseBallを復活させる
+document.addEventListener('click', () => {
+  // mouseBallが画面外に出ているか確認
+  const isOutOfBounds =
+    mouseBall.position.x < 0 ||
+    mouseBall.position.x > window.innerWidth ||
+    mouseBall.position.y < 0 ||
+    mouseBall.position.y > window.innerHeight;
+
+  if (isOutOfBounds) {
+    // mouseBallの位置を中央に復活させる
+    Body.setPosition(mouseBall, { x: window.innerWidth / 2, y: window.innerHeight / 2 });
+
+    // 速度をリセット
+    Body.setVelocity(mouseBall, { x: 0, y: 0 });
+
+  }
 });
 
 // リサイズ設定
